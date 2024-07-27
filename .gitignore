@@ -1,0 +1,4 @@
+creds
+dist
+.env
+node_modules
