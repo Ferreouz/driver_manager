@@ -4,6 +4,9 @@ export type FolderOrFile = {
     name: string,
     parentId?: string
 }
+export function isFolderOrFile(obj: any): obj is FolderOrFile {
+    return 'type' in obj && 'id' in obj && 'name' in obj;
+}
 export const ext2mime = {
     '.txt': 'text/plain',
     '.html': 'text/html',

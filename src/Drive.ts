@@ -1,7 +1,7 @@
 import fs from "fs"
 import { google, drive_v3 } from "googleapis"
 import path from "path"
-import { ext2mime, FolderOrFile } from "./fileutils";
+import { ext2mime, FolderOrFile, isFolderOrFile } from "./fileutils";
 
 export default class Drive {
 
@@ -85,6 +85,11 @@ export default class Drive {
   }
 
   public async mkdir(folderName: string, parentFolderId = this.rootFolder): Promise<string | undefined> {
+
+    const list = await this.getFolderId(folderName, parentFolderId);
+    if(list && list.length > 0) {
+      return list[0].id; 
+    }
 
     const metadata: any = {
       name: folderName,
