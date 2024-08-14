@@ -2,26 +2,39 @@ import fs from "fs"
 import { google, drive_v3 } from "googleapis"
 import path from "path"
 import { ext2mime, FolderOrFile, isFolderOrFile } from "./fileutils";
+import { Credentials } from "./types";
+import { checkAuthentication } from "./decorator";
 
 export default class Drive {
 
   private drive: drive_v3.Drive;
   constructor(
-    private serviceAccount: string,
-    private rootFolder: string
+    private rootFolder: string,
+    private credentialsPath?: string,
+    private credentials?: Credentials,
   ) {
-    this.auth();
+    if (!credentialsPath && !credentials) {
+      throw new Error("Need a credentials PATH or in JSON form");
+    }
   }
 
-  private auth(): void {
+  private async auth(): Promise<void> {
+    console.log("auth called")
     const auth = new google.auth.GoogleAuth({
-      keyFile: this.serviceAccount,
+      credentials: this.credentials,
+      keyFile: this.credentialsPath,
       scopes: ['https://www.googleapis.com/auth/drive'],
     });
-    // Initialize the Drive API
+    const client = await auth.getClient();
+    const tokens = await client.getAccessToken();
+    if (!tokens.token) {
+      throw new Error("Authorization could not be verified, check your credentials");
+    }
+
     this.drive = google.drive({ version: 'v3', auth });
   }
 
+  @checkAuthentication()
   public async upload(filePath: string, folderId: string): Promise<string | undefined> {
     const fileMetadata = {
       name: path.basename(filePath),
@@ -46,7 +59,30 @@ export default class Drive {
     return undefined;
   }
 
+  @checkAuthentication()
+  async mv(itemId: string, newParentId: string): Promise<boolean> {
+    try {
+      // Get the existing parents of the folder
+      const res = await this.drive.files.get({
+        fileId: itemId,
+        fields: 'parents',
+      });
+      const previousParents = res.data?.parents?.join(',');
 
+      // Remove the folder from its previous parents
+      await this.drive.files.update({
+        fileId: itemId,
+        addParents: newParentId,
+        removeParents: previousParents,
+        fields: 'id, parents',
+      });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+
+  @checkAuthentication()
   public async getChildren(folderId = this.rootFolder): Promise<FolderOrFile[]> {
     const filesFolders: FolderOrFile[] = [];
 
@@ -56,7 +92,7 @@ export default class Drive {
         fields: 'files(id, name, mimeType, parents)',
       });
 
-      const files = response.data.files || [];
+      const files = response?.data?.files || [];
 
       if (files.length > 0) {
         files.forEach((file, index) => {
@@ -66,17 +102,16 @@ export default class Drive {
             id: file.id,
             parentId: file.parents.pop()
           })
-          // console.log(`[-] ${filesFolders[index].name} ${filesFolders[index].type} ${filesFolders[index].id}`);
         });
       }
+      return filesFolders.sort((a, b) => a.name > b.name ? 1 : -1);
 
     } catch (error) {
-      console.error('Error listing files:', error);
-    } finally {
-      return filesFolders.sort((a, b) => a.name > b.name ? 1 : -1);
-    }
+      throw error;
+    } 
   }
 
+  @checkAuthentication()
   public async getFolderId(folderName: string, parentId = this.rootFolder): Promise<FolderOrFile[] | undefined> {
 
     const list = await this.getChildren(parentId);
@@ -84,11 +119,12 @@ export default class Drive {
     return out;
   }
 
+  @checkAuthentication()
   public async mkdir(folderName: string, parentFolderId = this.rootFolder): Promise<string | undefined> {
 
     const list = await this.getFolderId(folderName, parentFolderId);
-    if(list && list.length > 0) {
-      return list[0].id; 
+    if (list && list.length > 0) {
+      return list[0].id;
     }
 
     const metadata: any = {
