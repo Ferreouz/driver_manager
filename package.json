@@ -1,16 +1,22 @@
 {
   "name": "driver_manager",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "main": "dist/index",
   "scripts": {
     "start": "tsc && node dist/index.js",
     "test": "jest",
     "build": "tsc"
   },
-  "keywords": [],
-  "author": "",
+  "keywords": [
+    "Google Drive"
+  ],
+  "author": "ferreouz",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Ferreouz/driver_manager.git"
+  },
   "license": "ISC",
-  "description": "",
+  "description": "A Google Drive operations simplifier",
   "devDependencies": {
     "@babel/core": "^7.24.9",
     "@babel/plugin-proposal-decorators": "^7.24.7",
