@@ -1,3 +1,4 @@
-import Drive from "./Drive";
+import Drive from "./Drive"
 
 export default Drive
+module.exports = Drive

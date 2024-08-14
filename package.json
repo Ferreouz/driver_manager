@@ -1,11 +1,14 @@
 {
   "name": "driver_manager",
   "version": "0.0.1",
-  "main": "dist/index",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "scripts": {
     "start": "tsc && node dist/index.js",
     "test": "jest",
-    "build": "tsc"
+    "lint": "tsc",
+    "build": "tsup"
   },
   "keywords": [
     "Google Drive"
@@ -28,6 +31,7 @@
     "globals": "^15.8.0",
     "jest": "^29.7.0",
     "ts-jest": "^29.2.4",
+    "tsup": "^8.2.4",
     "typescript": "^5.5.4"
   },
   "dependencies": {

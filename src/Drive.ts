@@ -19,7 +19,6 @@ export default class Drive {
   }
 
   private async auth(): Promise<void> {
-    console.log("auth called")
     const auth = new google.auth.GoogleAuth({
       credentials: this.credentials,
       keyFile: this.credentialsPath,
