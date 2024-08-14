@@ -1,9 +1,10 @@
 /creds
-/dist
 .env
+.env.example
 /node_modules
 /src
+/test
+/.github
 
-.github
 tsconfig.json
 tsup.config.ts
